@@ -4,3 +4,4 @@ dist/
 # scripts/
 .cache
 .vscode
+*.pyi
