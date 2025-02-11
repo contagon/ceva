@@ -2,3 +2,5 @@ build/
 ceva.egg-info/
 dist/
 # scripts/
+.cache
+.vscode
