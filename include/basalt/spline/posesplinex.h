@@ -20,6 +20,8 @@ typedef Sophus::SE3<double> SE3d;
 
 
 /* #region "Dynamic order" spline -----------------------------------------------------------------------------------*/
+typedef basalt::Se3Spline<2> PoseSpline2;
+typedef basalt::Se3Spline<3> PoseSpline3;
 typedef basalt::Se3Spline<4> PoseSpline4;
 typedef basalt::Se3Spline<5> PoseSpline5;
 typedef basalt::Se3Spline<6> PoseSpline6;
@@ -31,30 +33,38 @@ typedef basalt::Se3Spline<9> PoseSpline9;
 #define SPLINE_SET(SF, ...)                    \
     switch(X)                                  \
     {                                          \
+        case(2): traj2.SF(__VA_ARGS__); break; \
+        case(3): traj3.SF(__VA_ARGS__); break; \
         case(4): traj4.SF(__VA_ARGS__); break; \
         case(5): traj5.SF(__VA_ARGS__); break; \
         case(6): traj6.SF(__VA_ARGS__); break; \
         case(7): traj7.SF(__VA_ARGS__); break; \
         case(8): traj8.SF(__VA_ARGS__); break; \
         case(9): traj9.SF(__VA_ARGS__); break; \
+        default: throw std::invalid_argument("Invalid order"); \
     };                                         \
 
 // Function to query the sline
 #define SPLINE_GET(SF, ...)                    \
     switch(X)                                  \
     {                                          \
+        case(2): return traj2.SF(__VA_ARGS__); \
+        case(3): return traj3.SF(__VA_ARGS__); \
         case(4): return traj4.SF(__VA_ARGS__); \
         case(5): return traj5.SF(__VA_ARGS__); \
         case(6): return traj6.SF(__VA_ARGS__); \
         case(7): return traj7.SF(__VA_ARGS__); \
         case(8): return traj8.SF(__VA_ARGS__); \
         case(9): return traj9.SF(__VA_ARGS__); \
+        default: throw std::invalid_argument("Invalid order"); \
     };                                         \
 
 class PoseSplineX
 {
 
 private:
+    PoseSpline2 traj2;
+    PoseSpline3 traj3;
     PoseSpline4 traj4;
     PoseSpline5 traj5;
     PoseSpline6 traj6;
@@ -68,6 +78,8 @@ public:
     PoseSplineX(int X_, double dt)
     :
         X(X_),
+        traj2(PoseSpline2(dt)),
+        traj3(PoseSpline3(dt)),
         traj4(PoseSpline4(dt)),
         traj5(PoseSpline5(dt)),
         traj6(PoseSpline6(dt)),
