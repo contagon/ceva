@@ -187,7 +187,7 @@ public:
     int num_knots = knots_pose.rows();
     int order = N;
 
-    printf("Creating spline of order %d and %d knots\n", order, num_knots);
+    // printf("Creating spline of order %d and %d knots\n", order, num_knots);
 
     traj = std::make_shared<PoseSplineX>(PoseSplineX(N, dt));
     double final_time = start_time + (num_knots - order + 1) * dt;
@@ -220,7 +220,7 @@ public:
       traj->setKnot(Sophus::SE3<double>(q, p), i);
     }
 
-    printf("Done\n");
+    // printf("Done\n");
   }
 
   // Get the pose at sample times
@@ -232,12 +232,12 @@ public:
       double t = sample_times[i];
 
       if (t < traj->minTime() + 1e-6) {
-        // printf("Sample time %.3f is before start_time %.3f\n", t,
-        // traj->minTime());
+        printf("Sample time %.3f is before start_time %.3f\n", t,
+               traj->minTime());
         t = traj->minTime() + 1e-6;
       } else if (t >= traj->maxTime() - 1e-6) {
-        // printf("Sample time %.3f is after final_time %.3f\n", t,
-        // traj->maxTime());
+        printf("Sample time %.3f is after final_time %.3f\n", t,
+               traj->maxTime());
         t = traj->maxTime() - 1e-6;
       }
       // else
