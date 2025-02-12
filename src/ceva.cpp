@@ -113,10 +113,10 @@ private:
 
 public:
   // Simple destructor
-  ~Ceva(){};
+  ~Ceva() {};
 
   // Simple constructor
-  Ceva(){};
+  Ceva() {};
 
   // Constructor using order and knot length
   Ceva(int N, double dt) {
@@ -400,6 +400,47 @@ public:
   void genRandomTrajectory(int n) { traj->genRandomTrajectory(n); }
 
   // Deskew a pointcloud
+  MatrixXd deskewCloudInBody(MatrixXd p_inBs, vector<double> tpoint,
+                             double stamp) {
+    // Number of points
+    int Npt = p_inBs.rows();
+
+    // Create base stamp
+    Sophus::SE3<double> base_T_world = traj->pose(stamp).inverse();
+
+    // Offset all timestamps
+    for (int i = 0; i < tpoint.size(); i++)
+      tpoint[i] += stamp;
+
+    // Create output points
+    MatrixXd p_inW(Npt, 3);
+
+// Transform the points
+#pragma omp parallel for num_threads(MAX_THREADS)
+    for (int i = 0; i < Npt; i++) {
+      double t = tpoint[i];
+
+      if (t < traj->minTime() + 1e-6) {
+        // printf("Sample time %.3f is before start_time %.3f\n", t,
+        // traj->minTime());
+        t = traj->minTime() + 1e-6;
+      } else if (t >= traj->maxTime() - 1e-6) {
+        // printf("Sample time %.3f is after final_time %.3f\n", t,
+        // traj->maxTime());
+        t = traj->maxTime() - 1e-6;
+      }
+
+      Sophus::SE3<double> se3 = base_T_world * traj->pose(t);
+      p_inW.block<1, 3>(i, 0) =
+          (se3.so3().unit_quaternion() * p_inBs.block<1, 3>(i, 0).transpose() +
+           se3.translation())
+              .transpose();
+    }
+
+    return p_inW;
+  }
+
+  // Deskew a pointcloud
   MatrixXd deskewCloud(MatrixXd p_inBs, vector<double> tpoint) {
     // Number of points
     int Npt = p_inBs.rows();
@@ -611,6 +652,10 @@ PYBIND11_MODULE(ceva, m) {
            static_cast<MatrixXd (Ceva::*)(MatrixXd, vector<double>)>(
                &Ceva::deskewCloud),
            "Deskew pointcloud given the time stamps.")
+      .def("deskewCloudInBody",
+           static_cast<MatrixXd (Ceva::*)(MatrixXd, vector<double>, double)>(
+               &Ceva::deskewCloudInBody),
+           "Deskew pointcloud given relative time stamps and a base timestamp.")
 
       /* #endregion Do something with the spline
          -----------------------------------------------------------------*/
